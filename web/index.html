@@ -8,6 +8,7 @@
     <!-- Load GSAP animation library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/CustomEase.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -21,7 +22,56 @@
     </div>
 
 
+    <canvas id="pointsChart"></canvas>
+
     <script>
+
+
+
+fetch('feature_importance.json')
+        .then(response => response.json())
+        .then(data => {
+            // Code to display data on the site
+            console.log(data);
+            // You can populate elements in the HTML based on this data
+        });
+
+var ctx = document.getElementById('pointsChart').getContext('2d');
+    var pointsChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Game 1', 'Game 2', 'Game 3', 'Game 4', 'Game 5'],  // Update these labels as needed
+            datasets: [
+                {
+                    label: 'UCSD Points',
+                    data: [85, 78, 92, 74, 88],  // Replace with UCSD points from data
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Opponent Points',
+                    data: [80, 82, 89, 70, 91],  // Replace with opponent points from data
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+
+
+
+
+
+
+
          
         const titles = [
             ["UC San Diego Basketball", "ML Data Set Overview"],  
@@ -65,16 +115,16 @@
 
     
             function updateTitle(newIndex, color) {
-    const title = titles[newIndex]; // Get the new title (array of [title, subtitle])
+        const title = titles[newIndex]; // Get the new title (array of [title, subtitle])
 
-    // Clear the existing title
-    slideTitle.innerHTML = ""; 
+        // Clear the existing title
+        slideTitle.innerHTML = ""; 
 
-    // Create title row for the title (first item in the array)
-    const titleRow = document.createElement("div");
-    titleRow.classList.add("slide-title-row", "title");
+        // Create title row for the title (first item in the array)
+        const titleRow = document.createElement("div");
+        titleRow.classList.add("slide-title-row", "title");
 
-    title[0].split("").forEach((char, letterIndex) => {
+        title[0].split("").forEach((char, letterIndex) => {
         const letter = document.createElement("div");
         letter.classList.add("letter");
 
@@ -97,13 +147,13 @@
             ease: "hop",
             delay: letterIndex * LETTER_STAGGER_DELAY
         });
-    });
+        });
 
-    // Create subtitle row for the position (second item in the array)
-    const subtitleRow = document.createElement("div");
-    subtitleRow.classList.add("slide-title-row", "subtitle");
+        // Create subtitle row for the position (second item in the array)
+        const subtitleRow = document.createElement("div");
+        subtitleRow.classList.add("slide-title-row", "subtitle");
 
-    title[1].split("").forEach((char, letterIndex) => {
+        title[1].split("").forEach((char, letterIndex) => {
         const letter = document.createElement("div");
         letter.classList.add("letter");
 
@@ -143,7 +193,7 @@
             //direction: Controls the animation direction depending on whether the new slide index is greater or less than the current one.
 
             
-            function createSlidesAndNav() {
+                function createSlidesAndNav() {
                 titles.forEach((_, i) => {
                     // creates both the slides and navigation dots
                     const navItemWrapper = document.createElement("div");
