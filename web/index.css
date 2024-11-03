@@ -15,6 +15,7 @@ html, body {
     overflow: hidden;
 }
 
+
 nav, footer {
     position: fixed;
     width: 190vh;
