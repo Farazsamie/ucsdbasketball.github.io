@@ -1,105 +1,111 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+from sklearn.preprocessing import StandardScaler
+import joblib
 import json
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-# Example: Save feature importance to JSON
-feature_importance.to_json("feature_importance.json", orient="records")
 
+# Load the Excel file
+try:
+    data = pd.read_excel('ucsdball.xlsx')
+except FileNotFoundError:
+    print("File not found. Please check the file path.")
+    exit()
+except Exception as e:
+    print(f"Error reading the file: {e}")
+    exit()
 
-# Load your Excel file
-data = pd.read_excel('ucsdball.xlsx')
-
-# Take a quick look at the data
+# Preview the dataset
+print("Data Preview:")
 print(data.head())
 
-# Check for missing values
+# Check and handle missing values
+print("\nMissing Values:")
 print(data.isnull().sum())
+data.fillna(method='ffill', inplace=True)  # Forward fill missing values
+data.fillna(method='bfill', inplace=True)  # Backward fill if forward fill doesn't work
 
-# Remove rows with missing data
-data = data.dropna()
+# Rename columns for clarity
+data.rename(columns={
+    'UCSD PTS: (Points)': 'UCSD_PTS',
+    'OPPONONET PTS: (Points)': 'Opponent_PTS',
+    'UCSD TO: (Turnovers)': 'UCSD_Turnovers',
+    'OPPONENT TO: (Turnovers)': 'Opponent_Turnovers',
+    'Home/Away  (1 if home, 0 if away)': 'Home_Away',
+    'Win/Loss  (1 if UCSD wins, 0 if UCSD loses)': 'Win'
+}, inplace=True)
 
-# Add a 'win' column, where 1 = UCSD win and 0 = UCSD loss
-data['win'] = data['Win/Loss  (1 if UCSD wins, 0 if UCSD loses)']
+# Feature Engineering
+data['win'] = data['Win']  # Binary target variable
+data['point_diff'] = data['UCSD_PTS'] - data['Opponent_PTS']
+data['possessions'] = data['UCSD FGA'] - data['UCSD OR'] + data['UCSD_Turnovers'] + 0.475 * data['UCSD FTA']
+data['offensive_efficiency'] = data['UCSD_PTS'] / data['possessions']
+data['defensive_efficiency'] = data['Opponent_PTS'] / data['possessions']
+data['turnover_diff'] = data['UCSD_Turnovers'] - data['Opponent_Turnovers']
 
+# Rolling averages
+data['ucsd_points_rolling_avg'] = data['UCSD_PTS'].rolling(window=5, min_periods=1).mean()
+data['turnover_rolling_avg'] = data['UCSD_Turnovers'].rolling(window=5, min_periods=1).mean()
 
+# Define features and target
+X = data[['UCSD_PTS', 'Opponent_PTS', 'point_diff', 'UCSD_Turnovers', 'Home_Away', 
+          'offensive_efficiency', 'defensive_efficiency', 'turnover_diff', 
+          'ucsd_points_rolling_avg', 'turnover_rolling_avg']]
+y = data['win']
 
+# Normalize the features
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
 
-##
-# Create a new feature: point difference
-data['point_diff'] = data['UCSD PTS: (Points)'] - data['OPPONONET PTS: (Points)']
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
 
-# Define features (X) and target (y)
-X = data[['UCSD PTS: (Points)', 'OPPONONET PTS: (Points)', 'point_diff', 'UCSD TO: (Turnovers)', 
-          'Home/Away  (1 if home, 0 if away)']]  # Features
-y = data['win']  # Target
+# Model initialization
+model = LogisticRegression(class_weight='balanced', random_state=42)
 
-
-##
-# Split the data into training (80%) and testing (20%)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# Initialize the model
-model = LogisticRegression()
-
-# Train the model on the training data
+# Train the model
 model.fit(X_train, y_train)
 
-# Make predictions on the test set
+# Make predictions
 y_pred = model.predict(X_test)
 
-# Calculate accuracy
+# Evaluate the model
 accuracy = accuracy_score(y_test, y_pred)
-print(f"Model Accuracy: {accuracy * 100:.2f}%")
-
-# Confusion matrix
+print(f"\nModel Accuracy: {accuracy * 100:.2f}%")
+print("\nConfusion Matrix:")
 cm = confusion_matrix(y_test, y_pred)
 print(cm)
 
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
 
-##
-
-# Check if your dataset includes the required columns; if not, you may need to collect that data.
-data['possessions'] = data['UCSD FGA'] - data['UCSD OR'] + data['UCSD TO'] + 0.475 * data['UCSD FTA']
-data['offensive_efficiency'] = data['UCSD PTS: (Points)'] / data['possessions']
-data['defensive_efficiency'] = data['OPPONONET PTS: (Points)'] / data['possessions']
-##
-
-# Calculate turnover differential
-data['turnover_diff'] = data['UCSD TO: (Turnovers)'] - data['OPPONENT TO: (Turnovers)']
-
-##
-
-# Compute rolling average of points for the last 5 games
-data['ucsd_points_rolling_avg'] = data['UCSD PTS: (Points)'].rolling(window=5).mean()
-
-# Similarly, you could add more rolling metrics for turnovers or opponent points.
-data['turnover_rolling_avg'] = data['UCSD TO: (Turnovers)'].rolling(window=5).mean()
-
-##
-
-# Update your features (X) to include new metrics
-X = data[['UCSD PTS: (Points)', 'OPPONONET PTS: (Points)', 'point_diff', 'UCSD TO: (Turnovers)',
-          'Home/Away  (1 if home, 0 if away)', 'offensive_efficiency', 'defensive_efficiency', 
-          'turnover_diff', 'ucsd_points_rolling_avg', 'turnover_rolling_avg']]
-
-y = data['win']
-
-# Split the data and train as before
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-model = LogisticRegression()
-model.fit(X_train, y_train)
-
-# Predictions and accuracy
-y_pred = model.predict(X_test)
-accuracy = accuracy_score(y_test, y_pred)
-print(f"Model Accuracy: {accuracy * 100:.2f}%")
-
-
-##
-# Display feature importance
-feature_importance = pd.DataFrame({'Feature': X.columns, 'Coefficient': model.coef_[0]})
+# Feature Importance
+feature_importance = pd.DataFrame({'Feature': [
+    'UCSD_PTS', 'Opponent_PTS', 'point_diff', 'UCSD_Turnovers', 'Home_Away', 
+    'offensive_efficiency', 'defensive_efficiency', 'turnover_diff', 
+    'ucsd_points_rolling_avg', 'turnover_rolling_avg'], 
+    'Coefficient': model.coef_[0]})
 feature_importance = feature_importance.sort_values(by='Coefficient', ascending=False)
+print("\nFeature Importance:")
 print(feature_importance)
+
+# Save feature importance to JSON
+feature_importance.to_json("feature_importance.json", orient="records", indent=4)
+
+# Visualize feature importance
+plt.figure(figsize=(10, 6))
+sns.barplot(x='Coefficient', y='Feature', data=feature_importance)
+plt.title('Feature Importance')
+plt.show()
+
+# Save the model for future use
+joblib.dump(model, "basketball_model.pkl")
+print("\nModel saved as 'basketball_model.pkl'.")
+
+# Save the scaler for consistent preprocessing
+joblib.dump(scaler, "scaler.pkl")
+print("\nScaler saved as 'scaler.pkl'.")
