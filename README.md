@@ -1,2 +1,2 @@
 # ucsdbasketball.github.io
-UC San Diego Basketball ML Model for Strategy Formulation
+UC San Diego Basketball ML Model To Test Ruber Band Effect (RBE)
