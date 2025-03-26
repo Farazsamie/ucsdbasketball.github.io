@@ -5,7 +5,7 @@ import seaborn as sns
 
 #Load in UCSD Dataset 
 try: 
-    data =pd.read_excel('ucsdbal.xlsx')
+    data =pd.read_excel('ucsdball.xlsx')
 except FileNotFoundError:
     print("File Not Found. Check FIle Path")
     exit ()
