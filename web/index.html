@@ -12,63 +12,19 @@
 </head>
 
 <body>
-    <h1>🏀 UC San Diego Basketball - Machine Learning Analysis</h1>
+    <h1>University of California, San Diego Basketball </h1>
+    <h1>Machine Learning Analysis</h1>
 
     <div class="results">
-        <h2>🔍 Model Summary</h2>
+        <h2>Model Summary</h2>
         <p><strong>Best Model:</strong> <span id="best-model"></span></p>
         <p><strong>Accuracy:</strong> <span id="accuracy"></span>%</p>
         <p><strong>ROC AUC Score:</strong> <span id="roc-auc"></span></p>
     </div>
 
     <div class="charts-container">
-        <h2>📊 Confusion Matrix</h2>
+        <h2>Confusion Matrix</h2>
         <canvas id="confusionMatrixChart"></canvas>
     </div>
 
-    <script>
-        // Load JSON results
-        fetch("results.json")
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("best-model").innerText = data.best_model;
-                document.getElementById("accuracy").innerText = data.accuracy.toFixed(2);
-                document.getElementById("roc-auc").innerText = data.roc_auc.toFixed(2);
-            });
-
-        // Load Confusion Matrix
-        fetch("confusion_matrix.json")
-            .then(response => response.json())
-            .then(data => {
-                const ctx = document.getElementById("confusionMatrixChart").getContext("2d");
-                new Chart(ctx, {
-                    type: "bar",
-                    data: {
-                        labels: data.labels,
-                        datasets: [
-                            {
-                                label: "Predicted Loss",
-                                data: data.matrix[0],
-                                backgroundColor: "rgba(255, 99, 132, 0.5)"
-                            },
-                            {
-                                label: "Predicted Win",
-                                data: data.matrix[1],
-                                backgroundColor: "rgba(54, 162, 235, 0.5)"
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        scales: {
-                            y: { beginAtZero: true }
-                        }
-                    }
-                });
-            });
-
-        // GSAP Animation for Fade-in Effect
-        gsap.from(".results", { opacity: 0, y: 30, duration: 1, ease: "power2.out" });
-        gsap.from(".charts-container", { opacity: 0, scale: 0.8, duration: 1.5, ease: "elastic.out(1, 0.5)", delay: 0.5 });
-    </script>
 </body>
