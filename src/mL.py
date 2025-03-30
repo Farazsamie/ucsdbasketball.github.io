@@ -16,7 +16,7 @@ try:
     data = pd.read_excel('ucsdball.xlsx')
 
 except FileNotFoundError:
-    print("File not found. Please check the file path.")
+    print("File Was Not found")
     exit()
 except Exception as e:
     print(f"Error reading the file: {e}")
